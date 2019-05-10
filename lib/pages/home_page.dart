@@ -13,6 +13,70 @@ class HomePage extends StatefulWidget{
 }
 
 class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
+
+  int page = 1;
+  List<Map> hot = new List<Map>();
+
+  @override
+  void initState() {
+    getHot({"page": page}).then((val){
+        var data  = json.decode(val);
+        setState(() {
+          hot.addAll((data['data'] as List).cast());
+        });
+    });
+
+    super.initState();
+  }
+
+  Widget hotView(){
+    return Column(
+      children: <Widget>[
+        hotTitle(),
+        goods()
+      ],
+    );
+  }
+
+  Widget goods(){
+    List<Widget> goodsView;
+    goodsView = hot.map<Widget>((item){
+        return Container(
+          color: Colors.white,
+          child: Column(
+            children: <Widget>[
+              Image.network(item['image'],width: 200.0,),
+              Text(
+                item['name'],
+                style: TextStyle(
+                  color: Colors.pink
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              )
+            ],
+          ),
+        );
+    }).toList();
+
+    return Wrap(
+      spacing: 2,
+      children: goodsView,
+    );
+  }
+
+  Widget hotTitle(){
+    return Container(
+      padding: EdgeInsets.only(top: 10.0,bottom: 10.0),
+      child: Text(
+         "火爆专区",
+        style: TextStyle(
+          color: Colors.pink
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -42,7 +106,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
                         MyNavigator(categoryList: category,),
                         MyAdBanner(adBanner: adBanner,),
                         callPhone(image, phone),
-                        RecommendView(recommendList)
+                        RecommendView(recommendList),
+                        hotView()
                       ],
                   ),
                 );
@@ -95,15 +160,18 @@ class MyNavigator extends StatelessWidget{
   Widget toItem(context,item){
     return InkWell(
       onTap: (){print("点击了 $item");},
-      child: Column(
-        children: <Widget>[
-          Image.network(item['image'],width: 50.0,height: 50.0,),
-          SizedBox(height: 5.0,),
-          Text(
-            item['mallCategoryName']
-          ),
+      child: Padding(
+        padding: EdgeInsets.only(top: 10.0),
+        child: Column(
+          children: <Widget>[
+            Image.network(item['image'],width: 40.0,height: 40.0,),
+            SizedBox(height: 5.0,),
+            Text(
+              item['mallCategoryName']
+            ),
 
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -116,7 +184,6 @@ class MyNavigator extends StatelessWidget{
     }
 
     return Container(
-      padding: EdgeInsets.only(top: 0.0),
       child: GridView.count(
         shrinkWrap: true,
         padding: EdgeInsets.all(5.0),
@@ -256,6 +323,7 @@ class RecommendView extends StatelessWidget{
   Widget build(BuildContext context) {
     // TODO: implement build
     return Container(
+      color: Colors.white,
       child: Column(
         children: <Widget>[
           _title(),
