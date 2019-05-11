@@ -5,6 +5,7 @@ import '../server/Api.dart';
 import '../view/empty_view.dart';
 import "dart:convert";
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_easyrefresh/easy_refresh.dart';
 
 class HomePage extends StatefulWidget{
 
@@ -19,14 +20,20 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
 
   @override
   void initState() {
-    getHot({"page": page}).then((val){
-        var data  = json.decode(val);
-        setState(() {
-          hot.addAll((data['data'] as List).cast());
-        });
-    });
+    get();
 
     super.initState();
+  }
+
+  void get(){
+    getHot({"page": page}).then((val){
+      var data  = json.decode(val);
+      setState(() {
+
+        List<Map> datalist = (data['data'] as List).cast();
+        hot.addAll(datalist);
+      });
+    });
   }
 
   Widget hotView(){
@@ -77,6 +84,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
     );
   }
 
+  GlobalKey<EasyRefreshState> _easyRefreshKey = new GlobalKey<EasyRefreshState>();
+  GlobalKey<RefreshFooterState> _footerKey = new GlobalKey<RefreshFooterState>();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -99,8 +109,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
                 String image = data['data']['shopInfo']['leaderImage'];
                 String phone = data['data']['shopInfo']['leaderPhone'];
                 List<Map> recommendList = (data['data']['recommend'] as List).cast();
-                return SingleChildScrollView(
-                  child: Column(
+                return EasyRefresh(
+                  key: _easyRefreshKey,
+                  child: ListView(
                       children: <Widget>[
                         MySwiper(mImageList: list,),
                         MyNavigator(categoryList: category,),
@@ -110,6 +121,15 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
                         hotView()
                       ],
                   ),
+                  loadMore: () async {
+                    get();
+                  },
+                  refreshFooter: ClassicsFooter(
+                    key: _footerKey,
+                    loadText: "加载数据中",
+                    noMoreText:"暂无数据",
+
+                  )
                 );
               }else{
                 return EmptyView();
